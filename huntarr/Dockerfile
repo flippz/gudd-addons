@@ -1,7 +1,25 @@
-ARG BUILD_FROM=ghcr.io/plexguide/huntarr:latest
+ARG BUILD_FROM
 FROM $BUILD_FROM
 
 ENV LANG=C.UTF-8
+
+# Set working directory
+WORKDIR /app
+
+# Install Huntarr dependencies
+RUN apk add --no-cache \
+    bash \
+    git \
+    && pip3 install --no-cache-dir \
+    requests \
+    flask \
+    flask-cors \
+    apscheduler \
+    gunicorn
+
+# Clone Huntarr
+RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app \
+    && rm -rf .git
 
 # Copy root filesystem
 COPY rootfs /
