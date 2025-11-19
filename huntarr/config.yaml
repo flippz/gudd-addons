@@ -3,10 +3,7 @@ arch:
   - amd64
   - armv7
 description: Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
-homeassistant: 2025.5.0
 init: true
-ingress: true
-ingress_port: 9705
 map:
   - addon_config:rw
   - config:rw
@@ -27,4 +24,4 @@ schema:
       value: str?
 slug: huntarr
 url: https://github.com/alexbelgium/hassio-addons
-version: "8.2.37"
+version: "8.2.38"
