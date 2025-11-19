@@ -18,19 +18,11 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
-# Copy Python libraries to standard location
-RUN cp -a /usr/local/lib/libpython* /usr/lib/ 2>/dev/null || true && ldconfig 2>/dev/null || true
-
-# Set Python environment variables
-ENV PATH="/usr/local/bin:$PATH" \
-    PYTHONPATH="/usr/local/lib/python3.9:/usr/local/lib/python3.9/lib-dynload" \
-    LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"
-
 # Set working directory
 WORKDIR /app
 
-# Run Python normally
-CMD ["python3", "main.py"]
+# Use login shell to load complete environment
+CMD ["/bin/bash", "-l", "-c", "cd /app && exec python3 main.py"]
 
 ############
 # 5 Labels #
