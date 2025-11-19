@@ -18,9 +18,11 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
-# Use the Huntarr image completely as-is
-# Keep the original entrypoint
-CMD ["/app/entrypoint.sh"]
+# Set working directory
+WORKDIR /app
+
+# Run with shell to ensure environment is loaded
+CMD ["/bin/bash", "-c", "cd /app && exec python3 main.py"]
 
 ############
 # 5 Labels #
