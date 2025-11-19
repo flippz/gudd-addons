@@ -41,11 +41,14 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'exec python3 main.py' >> /start.sh && \
     chmod +x /start.sh
 
+# Create /init to satisfy Home Assistant
+RUN ln -s /start.sh /init
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:9705/ || exit 1
 
-CMD ["/bin/bash", "/start.sh"]
+CMD ["/start.sh"]
 
 # Build arguments
 ARG BUILD_ARCH
