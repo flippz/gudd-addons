@@ -86,6 +86,23 @@ RUN chmod 777 /.bashio-standalone.sh
 
 CMD [ "/ha_entrypoint.sh" ]
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+############
+# 5 Labels #
+############
+
+ARG BUILD_ARCH
+ARG BUILD_DATE
+ARG BUILD_DESCRIPTION
+ARG BUILD_NAME
+ARG BUILD_REF
+ARG BUILD_REPOSITORY
+ARG BUILD_VERSION
+ENV BUILD_VERSION="${BUILD_VERSION}"
+LABEL \
+    io.hass.name="${BUILD_NAME}" \
+    io.hass.description="${BUILD_DESCRIPTION}" \
+    io.hass.arch="${BUILD_ARCH}" \
     io.hass.type="addon" \
     io.hass.version=${BUILD_VERSION} \
     maintainer="alexbelgium (https://github.com/alexbelgium)" \
@@ -105,13 +122,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # 6 Healthcheck #
 #################
 
-EXPOSE 9705
-
 HEALTHCHECK \
     --interval=30s \
     --timeout=10s \
     --start-period=60s \
     --retries=3 \
     CMD curl -f http://localhost:9705/ || exit 1
-
-CMD ["/bin/bash", "/run.sh"]
