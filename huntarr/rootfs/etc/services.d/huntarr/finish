@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Home Assistant Add-on: Huntarr
+# Take down the service
+# ==============================================================================
+
+bashio::log.info "Stopping Huntarr..."

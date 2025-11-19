@@ -1,16 +1,10 @@
-ARG BUILD_FROM
+ARG BUILD_FROM=ghcr.io/plexguide/huntarr:latest
 FROM $BUILD_FROM
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Setup base
-RUN \
-    apk add --no-cache \
-        bash \
-        tzdata
 
 # Copy root filesystem
 COPY rootfs /
