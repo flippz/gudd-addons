@@ -4,7 +4,6 @@ arch:
   - armv7
 description: Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
 homeassistant: 2025.5.0
-image: ghcr.io/alexbelgium/huntarr-{arch}
 ingress: true
 ingress_port: 9705
 map:
