@@ -3,16 +3,6 @@ FROM $BUILD_FROM
 
 ENV LANG=C.UTF-8
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Install required dependencies
-RUN apk add --no-cache \
-    bash \
-    python3 \
-    py3-pip \
-    tzdata
-
 # Copy root filesystem
 COPY rootfs /
 

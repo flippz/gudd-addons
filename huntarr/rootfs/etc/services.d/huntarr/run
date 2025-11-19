@@ -6,8 +6,11 @@
 
 bashio::log.info "Starting Huntarr..."
 
-# Export environment variables
-export TZ=$(bashio::config 'TZ')
+# Set timezone if configured
+if bashio::config.has_value 'TZ'; then
+    export TZ=$(bashio::config 'TZ')
+    bashio::log.info "Timezone set to: ${TZ}"
+fi
 
 # Export custom environment variables
 if bashio::config.has_value 'env_vars'; then
@@ -20,6 +23,7 @@ if bashio::config.has_value 'env_vars'; then
     done
 fi
 
-# Start Huntarr
+# Start Huntarr - let the base image handle it
 bashio::log.info "Starting Huntarr application..."
-exec /app/huntarr
+cd /app || exit 1
+exec python3 main.py
