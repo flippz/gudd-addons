@@ -56,7 +56,7 @@ RUN echo '#!/bin/bash' > /run.sh && \
     echo 'echo "Starting Huntarr..."' >> /run.sh && \
     echo 'cd /app' >> /run.sh && \
     echo 'exec python3 main.py' >> /run.sh && \
-    chmod 755 /run.sh
+    chmod +x /run.sh
 
 ############
 # 5 Labels #
@@ -102,4 +102,4 @@ HEALTHCHECK \
     --retries=3 \
     CMD curl -f http://localhost:9705/ || exit 1
 
-CMD ["/run.sh"]
+CMD ["/bin/bash", "/run.sh"]
