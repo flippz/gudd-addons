@@ -19,7 +19,8 @@ ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
 # Use the Huntarr image completely as-is
-# No modifications needed
+# Keep the original entrypoint
+CMD ["/app/entrypoint.sh"]
 
 ############
 # 5 Labels #
