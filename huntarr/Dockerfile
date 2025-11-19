@@ -40,6 +40,7 @@ RUN apk add --no-cache \
     git \
     jq \
     curl \
+    wget \
     && pip3 install --no-cache-dir \
     requests \
     flask \
@@ -73,17 +74,11 @@ RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh && rm /ha_autoapps.sh
 # 4 Entrypoint #
 ################
 
-# Add entrypoint
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" "/ha_entrypoint.sh"
-
-# Entrypoint modifications
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" "/ha_entrypoint_modif.sh"
-
-# Standalone bashio command
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" "/.bashio-standalone.sh"
-
-# Make all scripts executable
-RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh /.bashio-standalone.sh && \
+# Download entrypoint scripts
+RUN wget -O /ha_entrypoint.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" && \
+    wget -O /ha_entrypoint_modif.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" && \
+    wget -O /.bashio-standalone.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" && \
+    chmod +x /ha_entrypoint.sh /ha_entrypoint_modif.sh /.bashio-standalone.sh && \
     /ha_entrypoint_modif.sh && \
     rm /ha_entrypoint_modif.sh && \
     sed -i "s|/command/with-contenv|/usr/bin/env|g" "/ha_entrypoint.sh" && \
