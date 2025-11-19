@@ -74,21 +74,15 @@ RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh && rm /ha_autoapps.sh
 # 4 Entrypoint #
 ################
 
-# Download entrypoint scripts
-RUN wget -O /ha_entrypoint.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" && \
-    wget -O /ha_entrypoint_modif.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" && \
-    wget -O /.bashio-standalone.sh "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" && \
-    chmod +x /ha_entrypoint.sh /ha_entrypoint_modif.sh /.bashio-standalone.sh && \
-    /ha_entrypoint_modif.sh && \
-    rm /ha_entrypoint_modif.sh && \
-    sed -i "s|/command/with-contenv|/usr/bin/env|g" "/ha_entrypoint.sh" && \
-    chmod -R 755 /etc/services.d/ /etc/cont-init.d/ && \
-    chmod +x /ha_entrypoint.sh
+# Create simple startup script
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'cd /app' >> /start.sh && \
+    echo 'exec python3 main.py' >> /start.sh && \
+    chmod +x /start.sh
 
 WORKDIR /app
 
-ENTRYPOINT [ "/bin/bash" ]
-CMD [ "/ha_entrypoint.sh" ]
+CMD [ "/bin/bash", "/start.sh" ]
 
 ############
 # 5 Labels #
