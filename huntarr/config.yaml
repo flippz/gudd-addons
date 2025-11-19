@@ -1,0 +1,30 @@
+arch:
+  - aarch64
+  - amd64
+  - armv7
+description: Automatic missing content hunter for Sonarr, Radarr, Lidarr, Readarr, and Whisparr
+homeassistant: 2025.5.0
+image: ghcr.io/alexbelgium/huntarr-{arch}
+ingress: true
+ingress_port: 9705
+map:
+  - addon_config:rw
+  - config:rw
+name: Huntarr
+options:
+  TZ: America/New_York
+  env_vars: []
+panel_admin: false
+panel_icon: mdi:movie-search
+ports:
+  9705/tcp: 9705
+ports_description:
+  9705/tcp: Web UI port
+schema:
+  TZ: str
+  env_vars:
+    - name: match(^[A-Za-z0-9_]+$)
+      value: str?
+slug: huntarr
+url: https://github.com/alexbelgium/hassio-addons
+version: "8.2.10"
