@@ -1,4 +1,5 @@
-#!/usr/bin/with-contenv bashio
+#!/command/with-contenv bashio
+# shellcheck shell=bash
 # ==============================================================================
 # Home Assistant Add-on: Huntarr
 # Runs Huntarr
@@ -23,7 +24,6 @@ if bashio::config.has_value 'env_vars'; then
     done
 fi
 
-# Start Huntarr - let the base image handle it
-bashio::log.info "Starting Huntarr application..."
+# Start Huntarr
 cd /app || exit 1
 exec python3 main.py

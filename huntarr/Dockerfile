@@ -1,14 +1,16 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-ENV LANG=C.UTF-8
+# Set shell
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Set working directory
 WORKDIR /app
 
 # Install Huntarr dependencies
 RUN apk add --no-cache \
-    bash \
+    python3 \
+    py3-pip \
     git \
     && pip3 install --no-cache-dir \
     requests \
@@ -23,15 +25,6 @@ RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app \
 
 # Copy root filesystem
 COPY rootfs /
-
-# Make run script executable
-RUN chmod a+x /run.sh
-
-# Expose port
-EXPOSE 9705
-
-# Run Huntarr
-CMD ["/run.sh"]
 
 # Build arguments
 ARG BUILD_ARCH
