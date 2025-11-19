@@ -78,16 +78,17 @@ ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templat
 
 # Entrypoint modifications
 ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" "/ha_entrypoint_modif.sh"
-RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh && /ha_entrypoint_modif.sh && rm /ha_entrypoint_modif.sh
 
 # Standalone bashio command
 ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" "/.bashio-standalone.sh"
-RUN chmod 777 /.bashio-standalone.sh
 
-RUN sed -i "s|/command/with-contenv|/usr/bin/env|g" "/ha_entrypoint.sh"
-
-# Make service scripts executable
-RUN chmod -R 755 /etc/services.d/ /etc/cont-init.d/
+# Make all scripts executable
+RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh /.bashio-standalone.sh && \
+    /ha_entrypoint_modif.sh && \
+    rm /ha_entrypoint_modif.sh && \
+    sed -i "s|/command/with-contenv|/usr/bin/env|g" "/ha_entrypoint.sh" && \
+    chmod -R 755 /etc/services.d/ /etc/cont-init.d/ && \
+    chmod +x /ha_entrypoint.sh
 
 WORKDIR /app
 
