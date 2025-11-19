@@ -24,6 +24,15 @@ RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app \
 # Copy root filesystem
 COPY rootfs /
 
+# Make run script executable
+RUN chmod a+x /run.sh
+
+# Expose port
+EXPOSE 9705
+
+# Run Huntarr
+CMD ["/run.sh"]
+
 # Build arguments
 ARG BUILD_ARCH
 ARG BUILD_DATE
