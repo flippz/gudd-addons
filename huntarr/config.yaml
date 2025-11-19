@@ -26,4 +26,4 @@ schema:
       value: str?
 slug: huntarr
 url: https://github.com/alexbelgium/hassio-addons
-version: "8.2.16"
+version: "8.2.17"

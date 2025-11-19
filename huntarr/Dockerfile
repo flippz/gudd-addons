@@ -92,7 +92,7 @@ RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh /.bashio-standalone.sh &
 
 WORKDIR /app
 
-ENTRYPOINT [ "/usr/bin/env" ]
+ENTRYPOINT [ "/bin/bash" ]
 CMD [ "/ha_entrypoint.sh" ]
 
 ############
