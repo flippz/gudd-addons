@@ -21,6 +21,11 @@ FROM ${BUILD_FROM}
 # Copy Python libraries to standard location
 RUN cp -a /usr/local/lib/libpython* /usr/lib/ 2>/dev/null || true && ldconfig 2>/dev/null || true
 
+# Set Python environment variables
+ENV PATH="/usr/local/bin:$PATH" \
+    PYTHONPATH="/usr/local/lib/python3.9:/usr/local/lib/python3.9/lib-dynload" \
+    LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"
+
 # Set working directory
 WORKDIR /app
 
