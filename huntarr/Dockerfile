@@ -15,8 +15,8 @@
 #################
 
 ARG BUILD_FROM
-FROM $BUILD_FROM
-VOLUME [ "/data" ]
+ARG BUILD_VERSION
+FROM ${BUILD_FROM}
 
 ##################
 # 2 Modify Image #
@@ -27,12 +27,13 @@ ENV S6_CMD_WAIT_FOR_SERVICES=1 \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
     S6_SERVICES_GRACETIME=0
 
-# Install dependencies and Huntarr
+# Install Python and dependencies
 RUN apk add --no-cache \
+    python3 \
+    py3-pip \
     git \
-    curl \
-    tzdata && \
-    pip3 install --no-cache-dir \
+    curl && \
+    pip3 install --break-system-packages --no-cache-dir \
         requests \
         flask \
         flask-cors \
@@ -43,22 +44,10 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-##################
-# 3 Install apps #
-##################
-
-# Add rootfs
-COPY rootfs/ /
-
-# Uses /bin for compatibility purposes
-RUN if [ ! -f /bin/sh ] && [ -f /usr/bin/sh ]; then ln -s /usr/bin/sh /bin/sh; fi && \
-    if [ ! -f /bin/bash ] && [ -f /usr/bin/bash ]; then ln -s /usr/bin/bash /bin/bash; fi
-
-# Modules
-ARG MODULES="00-banner.sh 01-custom_script.sh"
-
-# Automatic modules download
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_automodules.sh" "/ha_automodules.sh"
+# Global LSIO modifications
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_lsio.sh" "/ha_lsio.sh"
+ARG CONFIGLOCATION="/config/addons_config/huntarr"
+RUN chmod 744 /ha_lsio.sh && if grep -qr "lsio" /etc; then /ha_lsio.sh "$CONFIGLOCATION"; fi && rm /ha_lsio.sh
 RUN chmod 744 /ha_automodules.sh && /ha_automodules.sh "$MODULES" && rm /ha_automodules.sh
 
 # Manual apps
