@@ -18,14 +18,11 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
-# Set library path so Python can find its libraries
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
 # Set working directory
 WORKDIR /app
 
-# Run with shell to ensure environment is loaded
-CMD ["/bin/bash", "-c", "cd /app && exec python3 main.py"]
+# Set library path in command and run
+CMD ["/bin/bash", "-c", "export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && cd /app && exec python3 main.py"]
 
 ############
 # 5 Labels #
