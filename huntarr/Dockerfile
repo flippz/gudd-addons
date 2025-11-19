@@ -15,61 +15,77 @@
 #################
 
 ARG BUILD_FROM
-ARG BUILD_VERSION
-FROM alpine:3.18
+FROM $BUILD_FROM
+VOLUME [ "/data" ]
 
 ##################
 # 2 Modify Image #
 ##################
 
-# Install dependencies
+# Set S6 wait time
+ENV S6_CMD_WAIT_FOR_SERVICES=1 \
+    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+    S6_SERVICES_GRACETIME=0
+
+# Install dependencies and Huntarr
 RUN apk add --no-cache \
-    bash \
-    python3 \
-    py3-pip \
     git \
     curl \
     tzdata && \
-    pip3 install --break-system-packages --no-cache-dir \
+    pip3 install --no-cache-dir \
         requests \
         flask \
         flask-cors \
         apscheduler \
-        gunicorn
+        gunicorn && \
+    git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app && \
+    rm -rf /app/.git
 
 WORKDIR /app
 
-# Clone Huntarr.io repository
-RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app && \
-    rm -rf .git
-
-# Create necessary directories
-RUN mkdir -p /config
-
 ##################
-# 3 Startup script #
+# 3 Install apps #
 ##################
 
-# Copy startup script
-COPY run.sh /run.sh
-RUN chmod +x /run.sh
+# Add rootfs
+COPY rootfs/ /
 
-############
-# 5 Labels #
-############
+# Uses /bin for compatibility purposes
+RUN if [ ! -f /bin/sh ] && [ -f /usr/bin/sh ]; then ln -s /usr/bin/sh /bin/sh; fi && \
+    if [ ! -f /bin/bash ] && [ -f /usr/bin/bash ]; then ln -s /usr/bin/bash /bin/bash; fi
 
-ARG BUILD_ARCH
-ARG BUILD_DATE
-ARG BUILD_DESCRIPTION
-ARG BUILD_NAME
-ARG BUILD_REF
-ARG BUILD_REPOSITORY
-ARG BUILD_VERSION
-ENV BUILD_VERSION="${BUILD_VERSION}"
-LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
-    io.hass.arch="${BUILD_ARCH}" \
+# Modules
+ARG MODULES="00-banner.sh 01-custom_script.sh"
+
+# Automatic modules download
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_automodules.sh" "/ha_automodules.sh"
+RUN chmod 744 /ha_automodules.sh && /ha_automodules.sh "$MODULES" && rm /ha_automodules.sh
+
+# Manual apps
+ENV PACKAGES=""
+
+# Automatic apps & bashio
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_autoapps.sh" "/ha_autoapps.sh"
+RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh "$PACKAGES" && rm /ha_autoapps.sh
+
+################
+# 4 Entrypoint #
+################
+
+# Add entrypoint
+ENV S6_STAGE2_HOOK=/ha_entrypoint.sh
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" "/ha_entrypoint.sh"
+
+# Entrypoint modifications
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" "/ha_entrypoint_modif.sh"
+RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh && /ha_entrypoint_modif.sh && rm /ha_entrypoint_modif.sh
+
+# Standalone bashio command
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" "/.bashio-standalone.sh"
+RUN chmod 777 /.bashio-standalone.sh
+
+CMD [ "/ha_entrypoint.sh" ]
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
     io.hass.type="addon" \
     io.hass.version=${BUILD_VERSION} \
     maintainer="alexbelgium (https://github.com/alexbelgium)" \
