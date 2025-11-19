@@ -1,6 +1,6 @@
 # Home Assistant Addon Compatibility Guide
 
-**Created:** November 19, 2025  
+**Created:** November 19, 2025
 **Based on:** 46+ versions of failed Huntarr addon attempts
 
 ## Critical Lesson Learned
@@ -120,6 +120,38 @@ docker inspect IMAGE:latest --format='{{.Config.Entrypoint}} {{.Config.Cmd}}'
 
 ---
 
+## alexbelgium's Official Guide
+
+**Reference:** https://github.com/alexbelgium/hassio-addons/wiki/Building-an-addon
+
+### Key Points from Official Documentation:
+
+1. **Two ways to build addons:**
+   - From scratch using HA base images
+   - **Converting existing images** (what alexbelgium does)
+
+2. **Image selection criteria:**
+   - Look on DockerHub for well-maintained images
+   - **Preferably with s6 supervision**
+   - Multi-architecture support (aarch64, amd64)
+   - **LinuxServer.io images recognized as best quality**
+
+3. **Environment variables:**
+   - "HA does not support passing environment variables dynamically"
+   - Must be fixed in Dockerfile (ENV) or config.json
+   - Use sed to modify scripts OR export in run scripts
+
+4. **His workflow:**
+   - Start with existing high-quality LSIO images
+   - Add Dockerfile modifications for HA integration
+   - Install bashio library
+   - Use sed to inject config options into scripts
+   - Create symlinks for data persistence
+
+**This confirms:** You can't just wrap any Docker image. The image needs s6-overlay built-in OR be built on HA bases.
+
+---
+
 ## Recommended Approaches
 
 ### Option 1: Use Pre-Built Images (Easiest)
@@ -165,7 +197,7 @@ Some images just can't be addons:
 1. ✗ Direct image use - wrong CMD executed
 2. ✗ LinuxServer.io base build - /init permission denied
 3. ✗ Alpine base build - s6-overlay missing
-4. ✗ HA base-python - /init permission denied  
+4. ✗ HA base-python - /init permission denied
 5. ✗ Custom entrypoint scripts - permission denied
 6. ✗ ENV LD_LIBRARY_PATH - stripped by HA
 7. ✗ Inline LD_LIBRARY_PATH - still stripped
