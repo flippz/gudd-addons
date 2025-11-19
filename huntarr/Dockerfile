@@ -1,56 +1,96 @@
 #============================#
-#  SIMPLE HUNTARR DOCKERFILE #
+#  ALEXBELGIUM'S DOCKERFILE  #
 #============================#
+#           _.------.
+#       _.-`    ('>.-`"""-.
+# '.--'`       _'`   _ .--.)
+#    -'         '-.-';`   `
+#    ' -      _.'  ``'--.
+#        '---`    .-'""`
+#               /`
+#=== Home Assistant Addon ===#
+
+#################
+# 1 Build Image #
+#################
 
 ARG BUILD_FROM
+ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
-# Set environment
-ENV LANG=C.UTF-8
+##################
+# 2 Modify Image #
+##################
+
+# Set S6 wait time
+ENV S6_CMD_WAIT_FOR_SERVICES=1 \
+    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
+    S6_SERVICES_GRACETIME=0
 
 # Install dependencies
 RUN apk add --no-cache \
     bash \
-    python3 \
-    py3-pip \
     git \
     curl \
-    tzdata \
-    && pip3 install --break-system-packages --no-cache-dir \
-    requests \
-    flask \
-    flask-cors \
-    apscheduler \
-    gunicorn
+    tzdata && \
+    pip3 install --break-system-packages --no-cache-dir \
+        requests \
+        flask \
+        flask-cors \
+        apscheduler \
+        gunicorn
 
-# Clone Huntarr
 WORKDIR /app
+
+# Clone Huntarr.io repository
 RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app && \
     rm -rf .git
 
-# Create config directory
+# Create necessary directories
 RUN mkdir -p /config
 
-# Expose port
-EXPOSE 9705
+##################
+# 3 Install apps #
+##################
 
-# Create startup script
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'echo "Starting Huntarr..."' >> /start.sh && \
-    echo 'cd /app' >> /start.sh && \
-    echo 'exec python3 main.py' >> /start.sh && \
-    chmod +x /start.sh
+# Add rootfs (s6-overlay service scripts)
+COPY rootfs/ /
 
-# Create /init to satisfy Home Assistant
-RUN ln -s /start.sh /init
+# Uses /bin for compatibility purposes
+RUN if [ ! -f /bin/sh ] && [ -f /usr/bin/sh ]; then ln -s /usr/bin/sh /bin/sh; fi && \
+    if [ ! -f /bin/bash ] && [ -f /usr/bin/bash ]; then ln -s /usr/bin/bash /bin/bash; fi
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:9705/ || exit 1
+# Modules
+ARG MODULES="00-banner.sh"
 
-CMD ["/start.sh"]
+# Automatic modules download
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_automodules.sh" "/ha_automodules.sh"
+RUN chmod 744 /ha_automodules.sh && /ha_automodules.sh "$MODULES" && rm /ha_automodules.sh
 
-# Build arguments
+# Automatic apps & bashio
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_autoapps.sh" "/ha_autoapps.sh"
+RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh && rm /ha_autoapps.sh
+
+################
+# 4 Entrypoint #
+################
+
+# Add entrypoint
+ENV S6_STAGE2_HOOK=/ha_entrypoint.sh
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" "/ha_entrypoint.sh"
+
+# Entrypoint modifications
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" "/ha_entrypoint_modif.sh"
+RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh && /ha_entrypoint_modif.sh && rm /ha_entrypoint_modif.sh
+
+# Standalone bashio command
+ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" "/.bashio-standalone.sh"
+RUN chmod 777 /.bashio-standalone.sh
+
+############
+# 5 Labels #
+############
+
 ARG BUILD_ARCH
 ARG BUILD_DATE
 ARG BUILD_DESCRIPTION
@@ -58,23 +98,33 @@ ARG BUILD_NAME
 ARG BUILD_REF
 ARG BUILD_REPOSITORY
 ARG BUILD_VERSION
-
-# Labels
+ENV BUILD_VERSION="${BUILD_VERSION}"
 LABEL \
     io.hass.name="${BUILD_NAME}" \
     io.hass.description="${BUILD_DESCRIPTION}" \
     io.hass.arch="${BUILD_ARCH}" \
     io.hass.type="addon" \
     io.hass.version=${BUILD_VERSION} \
-    maintainer="alexbelgium" \
+    maintainer="alexbelgium (https://github.com/alexbelgium)" \
     org.opencontainers.image.title="${BUILD_NAME}" \
     org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
     org.opencontainers.image.vendor="Home Assistant Add-ons" \
-    org.opencontainers.image.authors="alexbelgium" \
+    org.opencontainers.image.authors="alexbelgium (https://github.com/alexbelgium)" \
     org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://github.com/alexbelgium/hassio-addons" \
+    org.opencontainers.image.url="https://github.com/alexbelgium" \
     org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
     org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
     org.opencontainers.image.created=${BUILD_DATE} \
     org.opencontainers.image.revision=${BUILD_REF} \
     org.opencontainers.image.version=${BUILD_VERSION}
+
+#################
+# 6 Healthcheck #
+#################
+
+HEALTHCHECK \
+    --interval=30s \
+    --timeout=10s \
+    --start-period=60s \
+    --retries=3 \
+    CMD curl -f http://localhost:9705/ || exit 1

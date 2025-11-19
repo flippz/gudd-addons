@@ -1,9 +1,11 @@
 #!/command/with-contenv bashio
 # shellcheck shell=bash
 # ==============================================================================
-# Home Assistant Add-on: Huntarr
-# Runs Huntarr
+# Start Huntarr service
 # ==============================================================================
 
+bashio::log.info "Starting Huntarr..."
+
 cd /app || exit 1
-exec python3 main.py
+
+# Run Huntarr
