@@ -21,8 +21,8 @@ FROM ${BUILD_FROM}
 # Set working directory
 WORKDIR /app
 
-# Set library path in command and run
-CMD ["/bin/bash", "-c", "export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && cd /app && exec python3 main.py"]
+# Use absolute path to python and explicitly set library path
+CMD ["/bin/bash", "-c", "LD_LIBRARY_PATH=/usr/local/lib:/usr/lib /usr/local/bin/python3 main.py"]
 
 ############
 # 5 Labels #
