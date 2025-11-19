@@ -1,7 +1,7 @@
-#!/usr/bin/with-contenv bashio
+#!/command/execlineb -S0
 # ==============================================================================
 # Home Assistant Add-on: Huntarr
 # Take down the service
 # ==============================================================================
 
-bashio::log.info "Stopping Huntarr..."
+s6-svscanctl -t /var/run/s6/services
