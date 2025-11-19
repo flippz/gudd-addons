@@ -1,46 +1,21 @@
 #============================#
-#  ALEXBELGIUM'S DOCKERFILE  #
+#  SIMPLE HUNTARR DOCKERFILE #
 #============================#
-#           _.------.
-#       _.-`    ('>.-`"""-.
-# '.--'`       _'`   _ .--.)
-#    -'         '-.-';`   `
-#    ' -      _.'  ``'--.
-#        '---`    .-'""`
-#               /`
-#=== Home Assistant Addon ===#
-
-#################
-# 1 Build Image #
-#################
 
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-##################
-# 2 Modify Image #
-##################
+# Set environment
+ENV LANG=C.UTF-8
 
-# Set S6 wait time
-ENV S6_CMD_WAIT_FOR_SERVICES=1 \
-    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-    S6_SERVICES_GRACETIME=0
-
-# Set working directory
-WORKDIR /app
-
-##################
-# 3 Install apps #
-##################
-
-# Install Huntarr dependencies
+# Install dependencies
 RUN apk add --no-cache \
+    bash \
     python3 \
     py3-pip \
     git \
-    jq \
     curl \
-    wget \
+    tzdata \
     && pip3 install --no-cache-dir \
     requests \
     flask \
@@ -49,82 +24,28 @@ RUN apk add --no-cache \
     gunicorn
 
 # Clone Huntarr
-RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app \
-    && rm -rf .git
+WORKDIR /app
+RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app && \
+    rm -rf .git
 
-# Add rootfs
-COPY rootfs/ /
+# Create config directory
+RUN mkdir -p /config
 
-# Uses /bin for compatibility purposes
-RUN if [ ! -f /bin/sh ] && [ -f /usr/bin/sh ]; then ln -s /usr/bin/sh /bin/sh; fi && \
-    if [ ! -f /bin/bash ] && [ -f /usr/bin/bash ]; then ln -s /usr/bin/bash /bin/bash; fi
+# Expose port
+EXPOSE 9705
 
-# Modules
-ARG MODULES="00-banner.sh"
-
-# Automatic modules download
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_automodules.sh" "/ha_automodules.sh"
-RUN chmod 744 /ha_automodules.sh && /ha_automodules.sh "$MODULES" && rm /ha_automodules.sh
-
-# Automatic apps & bashio
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_autoapps.sh" "/ha_autoapps.sh"
-RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh && rm /ha_autoapps.sh
-
-################
-# 4 Entrypoint #
-################
-
-# Create simple startup script
+# Create startup script
 RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'echo "Starting Huntarr..."' >> /start.sh && \
     echo 'cd /app' >> /start.sh && \
     echo 'exec python3 main.py' >> /start.sh && \
     chmod +x /start.sh
 
-WORKDIR /app
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9705/ || exit 1
 
-CMD [ "/bin/bash", "/start.sh" ]
-
-############
-# 5 Labels #
-############
-
-ARG BUILD_ARCH
-ARG BUILD_DATE
-ARG BUILD_DESCRIPTION
-ARG BUILD_NAME
-ARG BUILD_REF
-ARG BUILD_REPOSITORY
-ARG BUILD_VERSION
-LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
-    io.hass.arch="${BUILD_ARCH}" \
-    io.hass.type="addon" \
-    io.hass.version=${BUILD_VERSION} \
-    maintainer="alexbelgium" \
-    org.opencontainers.image.title="${BUILD_NAME}" \
-    org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
-    org.opencontainers.image.vendor="Home Assistant Add-ons" \
-    org.opencontainers.image.authors="alexbelgium" \
-    org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://github.com/alexbelgium/hassio-addons" \
-    org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
-    org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
-    org.opencontainers.image.created=${BUILD_DATE} \
-    org.opencontainers.image.revision=${BUILD_REF} \
-    org.opencontainers.image.version=${BUILD_VERSION}
-
-#################
-# 6 Healthcheck #
-#################
-
-ENV HEALTH_PORT="9705"
-HEALTHCHECK \
-    --interval=30s \
-    --retries=5 \
-    --start-period=60s \
-    --timeout=25s \
-    CMD curl -A "HealthCheck: Docker/1.0" -s -f "http://127.0.0.1:${HEALTH_PORT}" &>/dev/null || exit 1
+CMD ["/bin/bash", "/start.sh"]
 
 # Build arguments
 ARG BUILD_ARCH
