@@ -16,20 +16,17 @@
 
 ARG BUILD_FROM
 ARG BUILD_VERSION
-FROM ${BUILD_FROM}
+FROM alpine:3.18
 
 ##################
 # 2 Modify Image #
 ##################
 
-# Set S6 wait time
-ENV S6_CMD_WAIT_FOR_SERVICES=1 \
-    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0 \
-    S6_SERVICES_GRACETIME=0
-
 # Install dependencies
 RUN apk add --no-cache \
     bash \
+    python3 \
+    py3-pip \
     git \
     curl \
     tzdata && \
@@ -50,42 +47,16 @@ RUN git clone --depth 1 https://github.com/plexguide/Huntarr.io.git /app && \
 RUN mkdir -p /config
 
 ##################
-# 3 Install apps #
+# 3 Startup script #
 ##################
 
-# Add rootfs (s6-overlay service scripts)
-COPY rootfs/ /
-
-# Uses /bin for compatibility purposes
-RUN if [ ! -f /bin/sh ] && [ -f /usr/bin/sh ]; then ln -s /usr/bin/sh /bin/sh; fi && \
-    if [ ! -f /bin/bash ] && [ -f /usr/bin/bash ]; then ln -s /usr/bin/bash /bin/bash; fi
-
-# Modules
-ARG MODULES="00-banner.sh"
-
-# Automatic modules download
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_automodules.sh" "/ha_automodules.sh"
-RUN chmod 744 /ha_automodules.sh && /ha_automodules.sh "$MODULES" && rm /ha_automodules.sh
-
-# Automatic apps & bashio
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_autoapps.sh" "/ha_autoapps.sh"
-RUN chmod 744 /ha_autoapps.sh && /ha_autoapps.sh && rm /ha_autoapps.sh
-
-################
-# 4 Entrypoint #
-################
-
-# Add entrypoint
-ENV S6_STAGE2_HOOK=/ha_entrypoint.sh
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint.sh" "/ha_entrypoint.sh"
-
-# Entrypoint modifications
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/ha_entrypoint_modif.sh" "/ha_entrypoint_modif.sh"
-RUN chmod 777 /ha_entrypoint.sh /ha_entrypoint_modif.sh && /ha_entrypoint_modif.sh && rm /ha_entrypoint_modif.sh
-
-# Standalone bashio command
-ADD "https://raw.githubusercontent.com/alexbelgium/hassio-addons/master/.templates/bashio-standalone.sh" "/.bashio-standalone.sh"
-RUN chmod 777 /.bashio-standalone.sh
+# Create simple startup script
+RUN echo '#!/bin/bash' > /run.sh && \
+    echo 'set -e' >> /run.sh && \
+    echo 'echo "Starting Huntarr..."' >> /run.sh && \
+    echo 'cd /app' >> /run.sh && \
+    echo 'exec python3 main.py' >> /run.sh && \
+    chmod 755 /run.sh
 
 ############
 # 5 Labels #
@@ -122,9 +93,13 @@ LABEL \
 # 6 Healthcheck #
 #################
 
+EXPOSE 9705
+
 HEALTHCHECK \
     --interval=30s \
     --timeout=10s \
     --start-period=60s \
     --retries=3 \
     CMD curl -f http://localhost:9705/ || exit 1
+
+CMD ["/run.sh"]
