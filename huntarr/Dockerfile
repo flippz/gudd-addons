@@ -50,13 +50,9 @@ RUN mkdir -p /config
 # 3 Startup script #
 ##################
 
-# Create simple startup script
-RUN echo '#!/bin/bash' > /run.sh && \
-    echo 'set -e' >> /run.sh && \
-    echo 'echo "Starting Huntarr..."' >> /run.sh && \
-    echo 'cd /app' >> /run.sh && \
-    echo 'exec python3 main.py' >> /run.sh && \
-    chmod +x /run.sh
+# Copy startup script
+COPY run.sh /run.sh
+RUN chmod +x /run.sh
 
 ############
 # 5 Labels #
