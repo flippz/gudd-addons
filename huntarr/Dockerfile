@@ -86,6 +86,9 @@ RUN chmod 777 /.bashio-standalone.sh
 
 RUN sed -i "s|/command/with-contenv|/usr/bin/env|g" "/ha_entrypoint.sh"
 
+# Make service scripts executable
+RUN chmod -R 755 /etc/services.d/ /etc/cont-init.d/
+
 WORKDIR /app
 
 ENTRYPOINT [ "/usr/bin/env" ]
