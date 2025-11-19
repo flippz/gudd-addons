@@ -18,11 +18,14 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
+# Copy Python libraries to standard location
+RUN cp -a /usr/local/lib/libpython* /usr/lib/ 2>/dev/null || true && ldconfig 2>/dev/null || true
+
 # Set working directory
 WORKDIR /app
 
-# Use absolute path to python and explicitly set library path
-CMD ["/bin/bash", "-c", "LD_LIBRARY_PATH=/usr/local/lib:/usr/lib /usr/local/bin/python3 main.py"]
+# Run Python normally
+CMD ["python3", "main.py"]
 
 ############
 # 5 Labels #
