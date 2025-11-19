@@ -16,7 +16,7 @@ RUN apk add --no-cache \
     git \
     curl \
     tzdata \
-    && pip3 install --no-cache-dir \
+    && pip3 install --break-system-packages --no-cache-dir \
     requests \
     flask \
     flask-cors \
