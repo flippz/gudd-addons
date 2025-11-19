@@ -3,9 +3,7 @@
 profile huntarr flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
 
-  # Capabilities
-  capability net_admin,
-  capability dac_override,
+  # Capabilities (minimal required for s6-overlay and Python)
   capability setgid,
   capability setuid,
   
@@ -32,14 +30,14 @@ profile huntarr flags=(attach_disconnected,mediate_deleted) {
   # Access to mapped volumes
   /config/** rw,
   /share/** rw,
-  /ssl/** rw,
+  /ssl/** r,
 
   # Config access
   /etc/hosts r,
   /etc/resolv.conf r,
   /etc/ssl/openssl.cnf r,
 
-  # DNS
+  # DNS and HTTP/HTTPS network access
   network inet udp,
   network inet tcp,
   network inet6 udp,
