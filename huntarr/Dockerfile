@@ -18,6 +18,9 @@ ARG BUILD_FROM
 ARG BUILD_VERSION
 FROM ${BUILD_FROM}
 
+# Set library path so Python can find its libraries
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
 # Set working directory
 WORKDIR /app
 
